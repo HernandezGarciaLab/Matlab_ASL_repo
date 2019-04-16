@@ -1,0 +1,16 @@
+function custom_colorbar(labels_vec)
+%function custom_colorbar(labels_vec)
+
+
+ncbar_labels=5;
+Ncolors = 64;
+
+
+c1 = colorbar('West');
+
+%set(c1,'YTick',[linspace(1,Ncolors,ncbar_labels) ],...
+set(c1,'YTick',labels_vec,...
+	'YLim', [1 Ncolors], ...
+    'YTickLabel',labels_vec, ...	
+	'FontSize',12 ...
+    );
