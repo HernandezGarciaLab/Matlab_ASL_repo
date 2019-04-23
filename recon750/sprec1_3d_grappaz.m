@@ -14,10 +14,10 @@ function strFileOut = sprec1_3d_grappaz(pfile,varargin)
 % included FFT along kz dimension for 3D spiral reconstruction
 %
 % Luis Hernandez-Garcia: 2016
-% including GRAPPA rexon along z axis
+% including GRAPPA recon along z axis
 %
 
-SHOWME = 2;
+SHOWME = 0;
 scriptmode = 0;
 warning off
 
@@ -299,7 +299,7 @@ else
                 tmp = dat(offset+1 : Nxy +offset, :) ;   % Grab the first few points of the FID for this Kz platter
                 
                 if phnum < args.numACS 
-                    fprintf('\nGrabbbing frame %d for grappa kernel calculation. isEven=%d', phnum, isEven)
+                    fprintf('\nGrabbbing frame %d for grappa kernel calculation. isEven=%d . slice=%d', phnum, isEven, slnum)
                     if isEven
                         evenBuf(:,:,slnum) = evenBuf(:,:,slnum) + tmp;
                     else
@@ -363,8 +363,8 @@ else
                 else
                     kz2 = kz2 + imarall; % squeeze(imarall(:,:,:,1));
                 end
-                
-            else
+            end
+            if phnum == args.numACS
                 full = zeros(size(imarall));
                 full = cat(3,full, full);
                 
@@ -378,7 +378,8 @@ else
                     fullimg(:,:,:,n) = fftshift( ifft( fftshift(full(:,:,:,n),3) ,[], 3) ,3 );
                 end
                 fullimg = sqrt( sum ( (fullimg .* conj(fullimg)) ,4 ) ) ;
-                
+                fullimg = fullimg/(args.numACS/2);
+
                 if args.flipx == 1
                     fullimg = flipud(fullimg);
                 end
@@ -386,6 +387,8 @@ else
                     fullimg = fliplr(fullimg);
                 end
                 
+                fprintf('\saving fully sampled calibration image (frame %d)', phnum);
+
                 save fullysampled.mat fullimg
                 
                 if SHOWME
@@ -443,9 +446,10 @@ else
             A = SourceData;
             B = TargetData;
             lambda = 1e3;
-                                   
+            
             grappaKernel = inv(A'*A + lambda*eye(size(A,2)))*A' * B;
             
+
             % grappaKernel = pinv(SourceData) * TargetData;
             rank(SourceData.')
             
@@ -501,7 +505,7 @@ else
                         % We hijack the variable 'dat' to store the 
                         % the target kz plane that we just calculated 
                         
-                        dat(k,:) = target;
+                        dat(k,:) = target ; %/ sqrt(Nkz*2);
                     
                 end
                 
@@ -569,7 +573,9 @@ else
             
             % Now combine the coil images:  Root mean square sum over the
             % coils (4th dimension)
-            imar_out = sqrt( sum ( imarall .* conj(imarall) ,4 ) ); %/ncoils ; 
+
+            imar_out = sqrt( sum ( (imarall .* conj(imarall)) ,4 ) ); %/ncoils ; 
+
             if args.complex
                 imar_out = sum(imarall,4); %/ncoils;
             end

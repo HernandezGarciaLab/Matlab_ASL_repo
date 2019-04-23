@@ -18,19 +18,21 @@ hdr = read_hdr(volname);
 
 %aslsub(volname(1:end-4), 4, 1, hdr.tdim, 0, 1, 0);
 
-aslsub(volname(1:end-4), 1, 1, hdr.tdim, 0, 0, 0);
+aslsub(volname(1:end-4), 1, 1, hdr.tdim, 0, 1, 0);
 
 % aslsub(volname(1:end-4), 12, 1, hdr.tdim, 0, 0, 0);
 
 
 % histo_series02('sub.img',[],100)
 %
-global args; clear args
+%global args; clear args
+
 ortho2005([],'tseries_file', 'sub.img',...
 	'wscale',[-400 400], ...
 	'roitype','sphere',...
-	'roisize',80,...
+	'roisize',60,...
 	'doMovie',1,...
+    'anat_file', [], ...
 	'interact',0 ...
 	);
 
@@ -53,10 +55,10 @@ str2 = sprintf('\n THE RECOMMENDED PHASE INCR. IS   %0.2f', (ind-1)*0.4);
 %
 
 figure(33)
-slices02('sub',[-400 400]) ; axis image
+slices02('sub',[-500 500]) ; axis image
 
 hdr = read_hdr('sub.hdr');
-axis([1 hdr.xdim*hdr.tdim (hdr.zdim/2-2)*hdr.ydim (hdr.zdim/2+2)*hdr.ydim]);
+axis([1 hdr.xdim*hdr.tdim (hdr.zdim/2-3)*hdr.ydim (hdr.zdim/2+3)*hdr.ydim]);
 title([str1 str2]);
 
 %myphase_correction=(ind-1);

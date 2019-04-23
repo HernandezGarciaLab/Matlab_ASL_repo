@@ -1,5 +1,5 @@
-function f = casl_pid_02(raw_file, M0frames, inv_alpha, flip, Ttag, TR, pid, Ttrans, T1, isGrappa)
-%function f = casl_pid_02(rawfile, M0frames, inv_alpha, flip, Ttag, TR, pid, Ttrans, T1, [isGrappa])
+function f = casl_pid_03(raw_file, M0frames, inv_alpha, flip, Ttag, TR, pid, Ttrans, T1, isGrappa)
+%function f = casl_pid_03(rawfile, M0frames, inv_alpha, flip, Ttag, TR, pid, Ttrans, T1, [isGrappa])
 % 
 % this function assumes that the first M0frames are acquired without
 % Background sppression pulses and uses them to calculate a spin density
@@ -10,7 +10,7 @@ function f = casl_pid_02(raw_file, M0frames, inv_alpha, flip, Ttag, TR, pid, Ttr
 % order to compute a CBF map.
 % Notes:
 % The spin Density map gets smooted to avoid funny spikes from the denominator.
-% The CBF calculation uses the equaiton in the ASL white paper:
+% The CBF calculation uses the equaiton in Alsop and Detre paper from 1996:
 %
 
 if nargin==9
@@ -47,7 +47,7 @@ if isGrappa
 end
 
 % correction for T1 settling 
-M0 = M0/(1 - exp(-TR/T1));
+M0 = M0/(1 - exp(-TR/T1)*sin((flip)));
 
 
 if doDespike
@@ -83,9 +83,10 @@ dirty = s;
 [clean junkcoms] = compcor12(dirty, hdr);
 s = mean(clean,1);
 %}
-
-write_img('Control.img',c ,h);
-write_img('Tagged.img',t, h);
+h2 = hdr;
+h2.tdim = 1;
+write_img('Control.img',c ,h2);
+write_img('Tagged.img',t, h2);
 
 
 %keyboard;
@@ -134,8 +135,12 @@ T1app = T1;
 
 fprintf('\nAveraging all the M0 values for the gray matter together...\n') 
 
+% Equation from White paper: assumes single compartment, or that PID>Ttrans
+% num = (s)*lambda*exp(pid/T1a);
+% den = 2*inv_alpha*T1a *M0 * (1 - exp(-Ttag/T1a));
+
 % This is equation 3 from Alsop et al: JCBFM 16, 1236-1249,1996
-% num = c-t;
+% num = s;
 % den = T1app*2*M0*inv_alpha/lambda * exp(-Ttrans*(1/T1a-1/T1app))*exp(-pid/T1a);
 
 % modification by Wang et al MRM 48,1,p242-254, 2002:
@@ -145,13 +150,10 @@ fprintf('\nAveraging all the M0 values for the gray matter together...\n')
 
 % looking at equation 1, delta_a and delta should be almost the same, we
 % can drop a term.
-% den =  2 * M0* inv_alpha / lambda ...
-%     *( T1app*exp(-Ttrans/T1a) * ( exp( (Ttrans-pid)/T1app ) - exp( (Ttrans-Ttag-pid)/T1app)));
+ num = s;
+ den =  2 * M0* inv_alpha / lambda ...
+     *( T1app*exp(-Ttrans/T1a) * ( exp( (Ttrans-pid)/T1app ) - exp( (Ttrans-Ttag-pid)/T1app)));
 
-
-% Equation from White paper: assumes single compartment, or that PID>Ttrans
-num = (s)*lambda*exp(pid/T1a);
-den = 2*inv_alpha*T1a *M0 * (1 - exp(-Ttag/T1a));
 
 f = num./den * 6000;  % adjust units to ml/min/100 g
 
