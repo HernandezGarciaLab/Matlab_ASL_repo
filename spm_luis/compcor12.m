@@ -1,5 +1,5 @@
-function [clean junkcomps] = compcor12(dirty, hdr, Ncomps)
-% function [clean junkcomps] = compcor12(dirty, hdr [,Ncomps])
+function [clean junkcomps] = compcor12(dirty, hdr, Ncomps, X)
+% function [clean junkcomps] = compcor12(dirty, hdr [,Ncomps] [,DesMat])
 %
 % written by Luis Hernandez-Garcia at UM (c) 2012
 %
@@ -55,6 +55,15 @@ plot(junkcomps), title (sprintf('First %d components',Ncomps));
 
 % mean center the components:
 junkcomps = junkcomps - repmat(mean(junkcomps,1), hdr.tdim,1);
+
+if nargin==4
+    fprintf('\ndecorrelating from design matrix\n...')
+
+    % decorrelate the junk components from the design matrix (desired effects)
+    for n=1:size(junkcomps,2)
+        junkcomps(:,n)= junkcomps(:,n) - X*pinv(X)*junkcomps(:,n);
+    end
+end
 
 bhat = pinv(junkcomps)*dirty;
 clean = dirty - junkcomps*bhat;
