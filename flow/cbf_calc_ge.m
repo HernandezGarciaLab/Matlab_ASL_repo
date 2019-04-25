@@ -54,5 +54,23 @@ cbfmap=cbf;
 cbfmap(find(msk1))=0;
 cbfmap(find(msk2))=1;
 
+%% Get original header, use it to write out cbfmap as nifti image
+
+h=read_nii_hdr(asl_filename);
+
+h2=h;
+h2.dim(5)=1;
+
+write_nii('cbfmap.nii', cbfmap, h2, 0)
+
+%%  Make PD map, scale and write out as nifti image
+
+pdmap=SF*pd;
+
+pdmap(find(msk1))=0;
+pdmap(find(msk2))=0;
+
+write_nii('pdmap.nii', pdmap, h2, 0);
+
 return
 
