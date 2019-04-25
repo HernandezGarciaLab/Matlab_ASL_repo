@@ -23,7 +23,8 @@ function [g,k,t,s,vd]=dogradvd(opfov,opxres,gts,gslew,fsgcm,nl,densamp);
 %*		rev 1 4/15/99	little better calc of ts 
 %*/ 
 % 
-% $Id: dogradvd.m 236 2012-09-20 21:09:24Z klitinas $
+% $HeadURL: svn+ssh://klitinas@woo.engin.umich.edu/work/repos/matlab/recon/branches/phase_zero/dogradvd.m $
+% $Id: dogradvd.m 1266 2014-03-20 18:12:40Z klitinas $
 
 MAX_PG_WAMP = 32766;
 GRESMAX = 21000;

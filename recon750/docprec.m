@@ -32,7 +32,8 @@ else
 	im1nz = 0;
 end % if (scaninfo.revflg > 0)
 
-if ((scaninfo.revflg ~= 1) && (args.rsa == 1))
+%if ((scaninfo.revflg ~= 1) && (args.rsa == 1))
+if ((scaninfo.revflg ~= 1)) % && (args.rsa == 2))
     % for forward  spiral
     datin = [];
 

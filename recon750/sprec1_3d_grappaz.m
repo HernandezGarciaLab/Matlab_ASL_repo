@@ -17,7 +17,7 @@ function strFileOut = sprec1_3d_grappaz(pfile,varargin)
 % including GRAPPA recon along z axis
 %
 
-SHOWME = 0;
+SHOWME = 2;
 scriptmode = 0;
 warning off
 
@@ -593,7 +593,7 @@ else
             figure(3); 
             
             lightbox(abs(imar_out),[],6); 
-            title('fft along Z of combined all coils ')
+            title(['fft along Z of combined all coils, frame  ' num2str(phnum)])
             if args.dograppaz && phnum >= args.numACS
                 figure(8)
                 subplot(224)            
