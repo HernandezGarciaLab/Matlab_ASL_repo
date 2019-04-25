@@ -1150,7 +1150,7 @@ while (button ~= 122)  % until they press Z.  122 is ASCII for the Z key
         end
         
         % Add a listener for the slider
-        hListener = handle.listener(hSlider,'ActionEvent',{@movieslidergcf,hSlider,hTxt,func_data,func_hdr,fmin,args,myfig,range,vx,vy,vz,roi,func_xyz,spm_hdr});
+        % hListener = handle.listener(hSlider,'ActionEvent',{@movieslidergcf,hSlider,hTxt,func_data,func_hdr,fmin,args,myfig,range,vx,vy,vz,roi,func_xyz,spm_hdr});
         
         % Make a button to start the movie
         hGo = uicontrol('Style','pushbutton');
