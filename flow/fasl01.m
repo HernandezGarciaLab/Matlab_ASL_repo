@@ -22,7 +22,7 @@ function varargout = fasl01(varargin)
 
 % Edit the above text to modify the response to help fasl01
 
-% Last Modified by GUIDE v2.5 19-Mar-2019 15:36:34
+% Last Modified by GUIDE v2.5 30-Apr-2019 13:46:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -129,7 +129,7 @@ if ~isempty(str)
 
     args.doLightbox = get(findobj('Tag','doLightbox_cb'),'Value');
     args.doOrtho = get(findobj('Tag','displayZmap_cb'),'Value');
-    
+    args.is_GE_asl = get(findobj('Tag','ge_cb'),'Value');
     
     %%  Here is the call to the main function:  %%%%%%%
     asl_spm01(args);
@@ -574,3 +574,21 @@ function isSubtracted_cb_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of isSubtracted_cb
+
+
+% --- Executes on button press in checkbox14.
+function checkbox14_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox14
+
+
+% --- Executes on button press in ge_cb.
+function ge_cb_Callback(hObject, eventdata, handles)
+% hObject    handle to ge_cb (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ge_cb

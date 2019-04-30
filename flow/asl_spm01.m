@@ -116,6 +116,14 @@ if args.doRecon
 
 end
 
+%% transform a GE vasl_3dasl image into the time series we want
+if args.is_GE_asl
+   fprintf('\nconverting ....%s into a time series', workFile);
+   fprintf('\n(putting the images in the right order and faking a control image\n');
+   ge_asl_2_timeseries(workFile); 
+   workFile = ['vol_' workFile];
+end
+
 %% SLice Timing correction for ASL
 if args.doSliceTime
     
