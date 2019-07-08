@@ -55,6 +55,7 @@ if nargin<1
     args.inFile = 'vol_e6294_09_25_107_0099.nii';
     args.doDespike = 0;
     args.doRecon=0;
+    args.doZgrappa= 0;
     args.doSliceTime=0;
     
     args.doRealign = 0;
@@ -111,14 +112,21 @@ if args.doRecon
         workFile = ['f_' workFile];
     end
     
-    if args.doRecon==1
+    %{if args.doRecon==1
         fprintf('\ndoing 2D recon on ....%s\n', workFile);
         sprec1(workFile, 'l', 'fy','N');
-    end
-    if args.doRecon==2
-        fprintf('\ndoing 3D recon on ....%s\n', workFile);
-        sprec1_3d(workFile, 'l', 'fy','N', 'C', 1);
-    end
+    %}end
+    
+    % include Z grappa option for recon
+    optstr = 'l';   
+    fprintf('\ndoing 3D recon on ....%s\n', workFile);
+    if args.doZgrappa = 1, 
+        optstr = 'dograppaz', 
+        fprintf('\n(Using 1-D GRAPPA along Z axis)');
+    end;
+
+    sprec1_3d_grappaz(workFile, 'l', 'fy','N', 'C', 1, optstr);
+    
     tmp = dir('vol*.nii');
     workFile = tmp(1).name;
     
