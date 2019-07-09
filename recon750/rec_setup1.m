@@ -306,9 +306,9 @@ else
 end
 % -------------- MR750 STUFF HERE BEGIN ----------------------------
 % mr750 fix - need to interpolate k-space traj
-nd2 = round(length(k)*scaninfo.gts/scaninfo.ts)
-scaninfo.ndat
-lk = length(k)
+nd2 = round(length(k)*scaninfo.gts/scaninfo.ts);
+scaninfo.ndat;
+lk = length(k);
 size(k);
 newk = interp1([1:lk],k,[1:nd2]*lk/nd2,'linear');
 newvd = interp1([1:lk],vd,[1:nd2]*lk/nd2,'linear');

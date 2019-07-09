@@ -151,7 +151,7 @@ function result = ortho2005(args,varargin)
 %
 %
 
-global args
+%global args
 if ~exist('args')
     args = [];
 end
@@ -344,6 +344,10 @@ set(gcf,'Position',[1 400 600 540]);
 
 strTag = getincrementaltag('myfig');
 set(gcf,'tag',strTag);
+
+if isempty(args.anat_file)
+    args.anat_file=args.tseries_file;
+end
 
 if ~isempty(args.anat_file)
     % Load the anatomical image into memory:

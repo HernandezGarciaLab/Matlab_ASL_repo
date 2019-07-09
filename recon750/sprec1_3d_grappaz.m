@@ -17,7 +17,7 @@ function strFileOut = sprec1_3d_grappaz(pfile,varargin)
 % including GRAPPA recon along z axis
 %
 
-SHOWME = 2;
+SHOWME = 0;
 scriptmode = 0;
 warning off
 
