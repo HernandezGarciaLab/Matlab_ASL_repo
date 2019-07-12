@@ -39,14 +39,12 @@ if nargin<1
     
     args.anat_img = [];
     args.template_img = [];
+    args.spat_norm_series = 1;
     
-    args.doGLM = 0;
-    args.designMat = [];
-    args.isSubtracted = 1;
-    args.contrasts = [0 0 -1 1];
     args.doQuant = 0;
-    args.doGlobalMean = 0;
-    
+    args.Diff_img = 'mean_sub.img';  
+    args.SpinDens_img = 'SpinDensity.img';
+ 
     args.aslParms.TR = 3;
     args.aslParms.Ttag = 1.4;
     args.aslParms.Tdelay = 1.2;
@@ -54,6 +52,13 @@ if nargin<1
     args.aslParms.inv_alpha = 0.8;
     args.aslParms.disdaqs = 2;
     
+    
+    args.doGLM = 0;
+    args.designMat = [];
+    args.isSubtracted = 1;
+    args.contrasts = [0 0 -1 1];
+    args.doQuant = 0;
+    args.doGlobalMean = 0;
     args.doLightbox = 0;
     args.doOrtho = 1;
     
@@ -96,13 +101,20 @@ if args.doRecon
     fprintf('\ndoing 3D recon on ....%s\n', workFile);
     
     % include Z grappa option for recon
-    optstr = 'l';
     if args.doZgrappa == 1,
-        optstr = 'dograppaz',
         fprintf('\n(Using 1-D GRAPPA along Z axis)');
-    end;
-    
-    sprec1_3d_grappaz(workFile, 'l', 'fy','N', 'C', 1, optstr);
+        fprintf('\nwarning ... REMOVING AND *VOL* FILES FROM DIRECTORY '); pause(3)
+        !rm *vol*
+        sprec1_3d_grappaz(workFile, 'l', 'fy','N', 'C', 1, 'grappaz', args.M0frames);
+        load fullysampled.mat
+        tmp = dir('vol*.nii');
+        h = read_nii_hdr(tmp(1).name);
+        h = nii2avw_hdr(h);
+        h.tdim = 1;
+        write_img('SpinDensity.img', fullimg(:),h);
+    else
+        sprec1_3d_grappaz(workFile, 'l', 'fy','N', 'C', 1, 'l');
+    end
     
     tmp = dir('vol*.nii');
     workFile = tmp(1).name;
@@ -133,8 +145,9 @@ if args.doRealign
     opts.rtm=1;
     spm_realign(workFile, opts);
     spm_reslice(workFile);
-    
-    workFile = ['r' workFile];
+      
+    [pth, root, ext] = fileparts(workFile);
+    workFile = fullfile(pth, ['r' root ext]);
     
 end
 
@@ -148,10 +161,10 @@ if args.smoothSize >0
     % spm_smooth doesn't handle paths gracefully:
     [pth, root, ext] = fileparts(workFile);
     curDir = pwd;
-    cd(pth)
-    workFile = [root ext]
+    if ~isempty(pth); cd(pth); end
+    workFile = [root ext];
     spm_smooth(workFile,['s' workFile],[ sz sz sz], 4 );
-    workFile = [pth 's' workFile];
+    workFile = ['s' workFile];
     cd(curDir)
 end
 
@@ -203,12 +216,13 @@ if args.subType > 0
     Nframes = h.dim(5)
     warning off
     tfile = workFile;
+    
     switch args.subType
         
         case 1
             fprintf('\ndoing pairwise subtraction on ...%s\n', workFile);
             !rm sub.img sub.hdr
-            [p, rootname,e] = fileparts(workFile)
+            [p, rootname,e] = fileparts(workFile);
             aslsub(rootname, 1, args.M0frames + 1, Nframes, 0, args.subOrder, 0);
             
             figure
@@ -225,7 +239,7 @@ if args.subType > 0
         case 2
             fprintf('\ndoing surround subtraction on ...%s\n', workFile);
             !rm sub.img sub.hdr
-            [p, rootname,e] = fileparts(workFile)
+            [p, rootname,e] = fileparts(workFile);
             aslsub_sur(rootname, args.M0frames + 1, Nframes, 0, args.subOrder);
             
             figure
@@ -237,11 +251,14 @@ if args.subType > 0
             end
             workFile = 'sub.img';
             p = get(gcf, 'Position');
-            set(gcf,'Position', p + [1 -1 1 -1]*100);
+            set(gcf,'Position', p + [5 -1 0 0]*100);
             title('Mean Subtraction (surround)');
     end
     %
     %
+
+    colormap hot
+
     ortho_args = ortho2005;
     ortho_args.anat_file =  'mean_sub';
     ortho_args.tseries_file =  workFile;
@@ -251,9 +268,10 @@ if args.subType > 0
     ortho_args.doMovie = 0;
     ortho_args.interact = 0;
     ortho2005(ortho_args);
+   
     colormap hot
     p = get(gcf, 'Position');
-    set(gcf,'Position', p + [1 -1 1 -1]*100);
+    set(gcf,'Position', p + [2 -1 0 0]*100);
     title(sprintf('Subtracted Time Series'))
 end
 %% Physio correction section using CompCor:
@@ -292,18 +310,17 @@ end
 %%
 if args.doQuant==1
     
-    fprintf('\nCalculating mean baseline CBF from consensus paper model ....%s\n', volFile);
+    fprintf('\nCalculating mean baseline CBF from consensus paper model ...');
     
     M0frames = args.M0frames;  % the first frames do not have background suppression
     inv_alpha = args.inv_alpha;
     flip = 30 * pi/180;
     Ttag = args.Ttag;
     TR = args.TR;
-    Ttrans = args.Ttrans;
     pid = args.Tdelay;
     T1 = args.T1;
     
-    f = casl_pid_02(volFile, M0frames, inv_alpha, flip, Ttag, TR, pid, Ttrans, T1, 1);
+    f = calc_cbf_wp(args.Diff_img, args.SpinDens_img, inv_alpha, Ttag, TR, pid, T1);
     
     figure
     subplot(221),  lightbox('mean_sub');  title('mean subtraction')
@@ -319,7 +336,7 @@ if ~isempty(args.anat_img)
     flags.cost_fun='nmi';
     flags.tol = [0.01 0.01 0.01 0.001 0.001 0.001];
     
-    Vref = spm_vol(fullfile(cd,'./mean_sub.img'));
+    Vref = spm_vol(args.Diff_img);
     Vtgt = spm_vol(args.anat_img);
     
     x = spm_coreg(Vref,Vtgt, flags);
@@ -340,13 +357,14 @@ if ~isempty(args.anat_img)
         
         spm_normalise(Vref, Vtgt, 'mynorm_parms.mat');
         
-        
-        % apply the normalization to the sub images
-        fprintf('\nApplying Normalization to time series ...');
-        h = read_nii_hdr('sub.hdr');
-        for n=1:h.dim(5)
-            subfiles{n} = ['./sub.img,' num2str(n)];
-            spm_write_sn( subfiles{n}  , 'mynorm_parms.mat');
+        if args.spat_norm_series==1
+            % apply the normalization to the sub images
+            fprintf('\nApplying Normalization to time series ...');
+            h = read_nii_hdr('sub.hdr');
+            for n=1:h.dim(5)
+                subfiles{n} = ['./sub.img,' num2str(n)];
+                spm_write_sn( subfiles{n}  , 'mynorm_parms.mat');
+            end
         end
         
         fprintf('\nApplying Normalization to anatomical and mean_sub ...');
@@ -356,7 +374,7 @@ if ~isempty(args.anat_img)
         if args.doQuant
             fprintf('\nApplying Normalization to quantification images ...');
             spm_write_sn( './Flow.img'  , 'mynorm_parms.mat');
-            spm_write_sn( './SpinDensity.img'  , 'mynorm_parms.mat');
+            spm_write_sn( './sSpinDensity.img'  , 'mynorm_parms.mat');
         end
         
     end
@@ -413,7 +431,7 @@ end
 
 
 %% convert betas to perfusions!
-if args.doQuant
+if args.doQuant_GLM
     if args.subType >0
         isSubtracted=1
     else
@@ -472,14 +490,13 @@ end
 %% Adding new stuff below (8/21/13)
 %
 % Make a mean image of the functional(s)
-
-[data h] = read_img(workFile);
-[p n e]=fileparts(workFile);
-if e ~='.nii'
-    h=avw2nii_hdr(h);
-end
-meandata = mean(data, 1);
-h.dim(5)=1;
+% [data h] = read_img(workFile);
+% [p n e]=fileparts(workFile);
+% if e ~='.nii'
+%     h=avw2nii_hdr(h);
+% end
+% meandata = mean(data, 1);
+% h.dim(5)=1;
 %write_nii('mean_func.nii', meandata, h,0);
 
 %% DIsplay the activation maps

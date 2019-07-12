@@ -22,7 +22,7 @@ function varargout = fasl02(varargin)
 
 % Edit the above text to modify the response to help fasl02
 
-% Last Modified by GUIDE v2.5 31-May-2019 15:00:26
+% Last Modified by GUIDE v2.5 12-Jul-2019 12:59:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,6 +97,7 @@ if ~isempty(str)
 
     args.anat_img = get(findobj('Tag','anat_img_edit'),'String');  
     args.template_img = get(findobj('Tag','template_img_edit'),'String');
+    args.spat_norm_series = get(findobj('Tag','spat_norm_series_cb'),'Value');
 
     
     tmp=get(findobj('Tag','subtraction_cb'),'Value');
@@ -109,7 +110,21 @@ if ~isempty(str)
     end
     
     args.subOrder = 1;
-
+    
+    args.doQuant = get(findobj('Tag','quant_cbf_cb'),'Value');
+    args.Diff_img = get(findobj('Tag','Diff_img_edit'),'String');  
+    args.SpinDens_img = get(findobj('Tag','SpinDens_img_edit'), 'String');
+ 
+   
+    args.T1 = str2num(get(findobj('Tag','flip_edit'),'String'));
+    args.T1 = str2num(get(findobj('Tag','t1_edit'),'String'));
+    args.TR = str2num(get(findobj('Tag','tr_edit'),'String'));
+    args.Ttag = str2num(get(findobj('Tag','Ttag_edit'),'String'));
+    args.Tdelay = str2num(get(findobj('Tag','Tdelay_edit'),'String'));
+    args.Ttransit = str2num(get(findobj('Tag','Ttransit_edit'),'String'));
+    args.inv_alpha = str2num(get(findobj('Tag','alpha_edit'),'String'));
+    args.M0frames = str2num(get(findobj('Tag','M0frames_edit'),'String'));
+    
     args.CompCorr = get(findobj('Tag','CompCor_cb'),'Value');
     args.physCorr = get(findobj('Tag','physio_cb'),'Value');
     args.physFile = get(findobj('Tag','physioName_edit'),'String');
@@ -118,6 +133,7 @@ if ~isempty(str)
     
     args.doGLM = get(findobj('Tag','doGLM_cb'),'Value');
     args.designMat = [];;
+    args.doQuant_GLM = get(findobj('Tag','doQuant_GLM_cb'),'Value');
 
     if args.doGLM ~= 0
         xname = get(findobj('Tag','loadDesignMatrix_edit'),'String');
@@ -132,18 +148,6 @@ if ~isempty(str)
         whos c X
     end
     
-    args.doQuant = get(findobj('Tag','doQuant_GLM_cb'),'Value');
-    args.doQuant = get(findobj('Tag','quant_cbf_cb'),'Value');
-
-    args.T1 = str2num(get(findobj('Tag','flip_edit'),'String'));
-    args.T1 = str2num(get(findobj('Tag','t1_edit'),'String'));
-    args.TR = str2num(get(findobj('Tag','tr_edit'),'String'));
-    args.Ttag = str2num(get(findobj('Tag','Ttag_edit'),'String'));
-    args.Tdelay = str2num(get(findobj('Tag','Tdelay_edit'),'String'));
-    args.Ttransit = str2num(get(findobj('Tag','Ttransit_edit'),'String'));
-    args.inv_alpha = str2num(get(findobj('Tag','alpha_edit'),'String'));
-    args.M0frames = str2num(get(findobj('Tag','M0frames_edit'),'String'));
-
     args.doLightbox = get(findobj('Tag','doLightbox_cb'),'Value');
     args.doOrtho = get(findobj('Tag','displayZmap_cb'),'Value');
     args.is_GE_asl = get(findobj('Tag','ge_cb'),'Value');
@@ -323,27 +327,21 @@ function doGLM_cb_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of doGLM_cb
-if get(gco,'Value')==1
-   set(findobj('Tag', 'buildDesignMatrix_button'), 'Enable','on');
-   set(findobj('Tag', 'loadDesignMatrix_button'), 'Enable','on');
-   set(findobj('Tag', 'loadDesignMatrix_edit'), 'Enable','on');
-   set(findobj('Tag', 'contrasts_edit'), 'Enable','on');
-   set(findobj('Tag', 'contrasts_text'), 'Enable','on');
-   set(findobj('Tag', 'displayZmap_cb'), 'Enable','on');
-   set(findobj('Tag', 'isSubtracted_cb'), 'Enable','on');
-   set(findobj('Tag', 'doQuant_GLM_cb'), 'Enable','on');
-   set(findobj('Tag', 'doLightbox_cb'), 'Enable','on');
-else
-   set(findobj('Tag', 'buildDesignMatrix_button'), 'Enable','off');
-   set(findobj('Tag', 'loadDesignMatrix_button'), 'Enable','off');
-   set(findobj('Tag', 'loadDesignMatrix_edit'), 'Enable','off');
-   set(findobj('Tag', 'contrasts_edit'), 'Enable','off');
-   set(findobj('Tag', 'contrasts_text'), 'Enable','off');
-   set(findobj('Tag', 'displayZmap_cb'), 'Enable','off');
-   set(findobj('Tag', 'isSubtracted_cb'), 'Enable','off');
-   set(findobj('Tag', 'doQuant_GLM_cb'), 'Enable','off');   
-   set(findobj('Tag', 'doLightbox_cb'), 'Enable','off');
+tmp = get(gco,'Value');
+state = 'off'
+if tmp == 1
+    state = 'on';
 end
+set(findobj('Tag', 'buildDesignMatrix_button'), 'Enable',state);
+set(findobj('Tag', 'loadDesignMatrix_button'), 'Enable',state);
+set(findobj('Tag', 'loadDesignMatrix_edit'), 'Enable',state);
+set(findobj('Tag', 'contrasts_edit'), 'Enable',state);
+set(findobj('Tag', 'contrasts_text'), 'Enable',state);
+set(findobj('Tag', 'displayZmap_cb'), 'Enable',state);
+set(findobj('Tag', 'isSubtracted_cb'), 'Enable',state);
+set(findobj('Tag', 'doQuant_GLM_cb'), 'Enable',state);
+set(findobj('Tag', 'doLightbox_cb'), 'Enable',state);
+
 
 % --- Executes on button press in displayZmap_cb.
 function displayZmap_cb_Callback(hObject, eventdata, handles)
@@ -757,6 +755,18 @@ function quant_cbf_cb_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of quant_cbf_cb
+tmp = get(findobj('Tag', 'quant_cbf_cb'), 'Value');
+args.doQuant = tmp;
+state = 'off';
+if tmp
+    state = 'on';
+end
+set(findobj('Tag', 'Diff_img_button'), 'Enable', state);
+set(findobj('Tag', 'M0_img_button'), 'Enable', state);
+set(findobj('Tag', 'Diff_img_edit'), 'Enable', state);
+set(findobj('Tag', 'SpinDens_img_edit'), 'Enable', state);
+set(findobj('Tag', 'label_type_list'), 'Enable', state);
+
 
 
 % --- Executes on selection change in label_type_list.
@@ -835,3 +845,77 @@ function flip_edit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in Diff_img_button.
+function Diff_img_button_Callback(hObject, eventdata, handles)
+% hObject    handle to Diff_img_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[f,p]=uigetfile('*.*','Select the Subtraction Image for CBF quantification');
+str = fullfile(p,f);
+set(findobj('Tag','Diff_img_edit'),'String', str);
+
+% --- Executes on button press in M0_img_button.
+function M0_img_button_Callback(hObject, eventdata, handles)
+% hObject    handle to M0_img_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[f,p]=uigetfile('*.*','Select the Spin Density (M0) Image for CBF quantification');
+str = fullfile(p,f);
+set(findobj('Tag', 'SpinDens_img_edit'),'String', str);
+
+
+
+function Diff_img_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to Diff_img_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Diff_img_edit as text
+%        str2double(get(hObject,'String')) returns contents of Diff_img_edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function Diff_img_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Diff_img_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function SpinDens_img_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to SpinDens_img_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SpinDens_img_edit as text
+%        str2double(get(hObject,'String')) returns contents of SpinDens_img_edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function SpinDens_img_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SpinDens_img_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in spat_norm_series_cb.
+function spat_norm_series_cb_Callback(hObject, eventdata, handles)
+% hObject    handle to spat_norm_series_cb (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of spat_norm_series_cb

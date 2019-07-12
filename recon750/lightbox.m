@@ -1,54 +1,51 @@
 function [im, h]= lightbox(root, wscale, rows, imgNum)
 %function im = lightbox(root, [wscale],[ rows],[imageNum])
 %
-%   (c) 2005 Luis Hernandez-Garcia 
+%   (c) 2005 Luis Hernandez-Garcia
 %   University of Michigan
 %   report bugs to:  hernan@umich.edu
-%  
+%
 % This program displays the slices in a 3D data set OR a time series
 % root :  either the name of a file in a time series (could be asingle file)
 % 	or could also be a 3D matrix that you want to display in slices
 %	the program checks to see if it's a string or a matrix...
 % wscale: window scale factor for display
 % rows: number of rows of slices in the lightbox
-% 
-
-% $Id: lightbox.m 1279 2014-03-24 20:06:25Z klitinas $
-% $HeadURL: svn+ssh://klitinas@anger.engin.umich.edu/svn/matlab/img/trunk/lightbox.m $
+%
 
 global RT_MODE
 
 if nargin<4
-	num=1;
+    num=1;
 else
-	num=imgNum;
+    num=imgNum;
 end
 
 if isstr(root)
-	[im,h] = read_img(root);
-	if isfield(h,'magic')
-		h=nii2avw_hdr(h);
-	end
-
-        if h.tdim == 1
-		im = reshape(im,h.xdim, h.ydim, h.zdim);
-	else
-		im = reshape(im(num,:) ,h.xdim, h.ydim, h.zdim);
-	end 
+    [im,h] = read_img(root);
+    if isfield(h,'magic')
+        h=nii2avw_hdr(h);
+    end
+    
+    if h.tdim == 1
+        im = reshape(im,h.xdim, h.ydim, h.zdim);
+    else
+        im = reshape(im(num,:) ,h.xdim, h.ydim, h.zdim);
+    end
 else
-	im = root;
-	h.xdim=size(im,1);
-	h.ydim=size(im,2);
-	h.zdim=size(im,3);
-
+    im = root;
+    h.xdim=size(im,1);
+    h.ydim=size(im,2);
+    h.zdim=size(im,3);
+    
 end
 
 if nargin==1
-	rows=[];
-	wscale=[];
+    rows=[];
+    wscale=[];
 end
 if isempty(rows)
-	rows = floor(sqrt(h.zdim)) ;
+    rows = floor(sqrt(h.zdim)) ;
 end
 M=[];
 cols=ceil(h.zdim/rows);
@@ -64,25 +61,32 @@ for r=1:rows
             Mrow = [Mrow  zeros(h.ydim, h.xdim)];
         end
         
-    end   
+    end
     M = [M ; Mrow];
 end
 
-
+%{
 if ~isempty(wscale)
     show(M, wscale);
 else
     show(M);
 end
+%}
+imagesc(M)
+if ~isempty(wscale)
+    caxis(wscale);
+end
 
-    axis image    
-    axis xy
+axis image
+axis xy
 if isempty(RT_MODE) || (RT_MODE ~=1)
     colormap(gray(256));
     grid off
     axis off
-
-
+    ncbar_labels=5;
+    c1 = colorbar;
+  
+    
 else
     set(gca,'Position',[0.01 0.01 0.99 0.99])
 end
@@ -105,17 +109,17 @@ else
     doColorBar=0;
 end
 
-if exist('windfact') == 0, 
-  amin = min(min(a));
-  amax = max(max(a));
-  minmax = [amin,amax];
-  a = (a  - amin);
+if exist('windfact') == 0,
+    amin = min(min(a));
+    amax = max(max(a));
+    minmax = [amin,amax];
+    a = (a  - amin);
 else
-  amin = windfact(1);
-  amax = windfact(2);
-  minmax = [amin,amax];
-  a = (a  - amin);
-
+    amin = windfact(1);
+    amax = windfact(2);
+    minmax = [amin,amax];
+    a = (a  - amin);
+    
 end
 
 
@@ -138,5 +142,5 @@ if doColorBar
 end
 
 if nargout==0 && isempty(RT_MODE),
-  disp(['min/max= ',num2str(minmax(1)),' / ',num2str(minmax(2))]);
+    disp(['min/max= ',num2str(minmax(1)),' / ',num2str(minmax(2))]);
 end;

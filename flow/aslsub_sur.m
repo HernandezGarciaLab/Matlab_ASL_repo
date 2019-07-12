@@ -66,7 +66,7 @@ end
 % do the subtraction 
 s = D4 * raw /2;
 
-if order==1
+if order==0
 	s = -1*s;
 end
 

@@ -298,7 +298,7 @@ else
                               
                 tmp = dat(offset+1 : Nxy +offset, :) ;   % Grab the first few points of the FID for this Kz platter
                 
-                if phnum < args.numACS 
+                if (phnum < args.numACS) && (phnum > 1 )
                     fprintf('\nGrabbbing frame %d for grappa kernel calculation. isEven=%d . slice=%d', phnum, isEven, slnum)
                     if isEven
                         evenBuf(:,:,slnum) = evenBuf(:,:,slnum) + tmp;
@@ -356,7 +356,7 @@ else
         if args.dograppaz
             
             % sanity check :
-            if phnum < args.numACS
+            if (phnum < args.numACS) && (phnum > 1)
                 fprintf('\nBuilding fully sampled calibration image with frame %d', phnum);
                 if isEven
                     kz1 = kz1 + imarall; % squeeze(imarall(:,:,:,1));

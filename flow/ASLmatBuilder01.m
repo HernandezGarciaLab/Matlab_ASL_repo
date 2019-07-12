@@ -22,7 +22,7 @@ function varargout = ASLmatBuilder01(varargin)
 
 % Edit the above text to modify the response to help ASLmatBuilder01
 
-% Last Modified by GUIDE v2.5 20-Aug-2010 13:32:50
+% Last Modified by GUIDE v2.5 11-Jul-2019 15:46:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -191,28 +191,6 @@ global onsets durations N isUnsubtracted X
 
 r = str2num(get(gco,'String'));
 
-% 
-% cnums=[1:r-1 r+1:N];
-% 
-% o2 = cell(1,N-1);
-% d2 = cell(1,N-1);
-% 
-% for c=1:N-1
-%     o2{c} = onsets{cnums(c)};
-%     d2{c} = durations{cnums(c)};
-% end
-% 
-% onsets=o2;
-% durations=d2;
-% N=N-1;
-% 
-% doASLmod = get(findobj('Tag','isUnsubtracted_cb'), 'Value');
-% 
-% exp_duration = str2num(get(findobj('Tag','expDuration_edit'), 'String'));
-% TR = str2num(get(findobj('Tag','expTR_edit'), 'String'));
-% X = buildDesMat(TR, exp_duration, onsets, durations, doASLmod);
-% 
-
 X = X( :,  [1:r-1  r+1:end]);
 set(gco,'String',[]);
 imagesc(X); colormap gray;
@@ -267,6 +245,7 @@ end
 if ~isempty(fname)
     save(fname, 'X', '-ascii')
 end
+fprintf('\nSaved %s as an ASCII file\n', fname);
 
 function tr_edit_Callback(hObject, eventdata, handles)
 % hObject    handle to tr_edit (see GCBO)
@@ -373,5 +352,3 @@ function predefined_txt_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
