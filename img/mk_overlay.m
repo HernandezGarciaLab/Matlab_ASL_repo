@@ -19,7 +19,7 @@ if isempty(range)
 end
 
 % scale the activation maps to use the whole colormap
-if computer=='PCWIN64'
+if strcmp(computer,'PCWIN64')
     spm_data = (spm_data - Bmin )* 64 /range ;
 else
     spm_data = (spm_data - Bmin )* 256 /range ;

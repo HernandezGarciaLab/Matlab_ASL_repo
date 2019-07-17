@@ -282,10 +282,12 @@ if args.CompCorr==1
     
     
     [clean junkcoms] = compcor12(dirty, hdr, 10);
-    
-    tmp = ['clean_' workFile];
+            
+    fprintf('\nWriting ....%s version \n', workFile);
+    [pth root ext] = fileparts(workFile);
+    tmp = ['clean_' root ext];
     write_img(tmp, clean, hdr);
-    
+
     if ~isempty(args.designMat)
         % decorrelate the designmatrix out of the confounds
         fprintf('\nDecorrelating junk regressors from CompCor  ...\n')
@@ -301,11 +303,16 @@ if args.CompCorr==1
         
         args.designMat = [args.designMat junkcoms];
         args.contrasts = [args.contrasts zeros(size(args.contrasts,1),size(junkcoms,2))] ;
+        x = args.designMat ;
+        
+
+        fprintf('\nWriting out adjusted (compcor) design matrix : designMat_compcor.dat ...\n')
+        save designMat_compcor.dat x -ascii
         
         figure; imagesc(args.designMat);
         title('Design Matrix with CompCor confounds');drawnow
     end
-    workFile = tmp;
+
 end
 %%
 if args.doQuant==1
@@ -359,10 +366,13 @@ if ~isempty(args.anat_img)
         
         if args.spat_norm_series==1
             % apply the normalization to the sub images
-            fprintf('\nApplying Normalization to time series ...');
+            fprintf('\nApplying Normalization to time series %s ...', workFile);
             h = read_nii_hdr('sub.hdr');
+            [pth root ext] = fileparts(workFile)
+            workFile = fullfile(pth , [root '.img']);
+            
             for n=1:h.dim(5)
-                subfiles{n} = ['./sub.img,' num2str(n)];
+                subfiles{n} = [workFile ',' num2str(n)];
                 spm_write_sn( subfiles{n}  , 'mynorm_parms.mat');
             end
         end
