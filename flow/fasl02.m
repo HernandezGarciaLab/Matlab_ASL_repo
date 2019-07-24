@@ -132,7 +132,7 @@ if ~isempty(str)
     args.doGlobalMean = 0;
     
     args.doGLM = get(findobj('Tag','doGLM_cb'),'Value');
-    args.designMat = [];;
+    args.designMat = [];
     args.doQuant_GLM = get(findobj('Tag','doQuant_GLM_cb'),'Value');
 
     if args.doGLM ~= 0

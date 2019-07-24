@@ -31,7 +31,7 @@ if nargin<1
     args.doSliceTime=0;
     
     args.doRealign = 0;
-    args.smoothSize= 0;
+    args.smoothSize= 8;
     args.subType = 0;
     args.physCorr = 0;
     args.physFile= [];
@@ -71,6 +71,7 @@ end
 % save arguments for future use
 save asl_spm03_params.mat args
 
+close all
 
 %% First figure out the input working file name
 workFile = args.inFile;
@@ -281,13 +282,18 @@ if args.CompCorr==1
     [dirty hdr] = read_img(workFile);
     
     
-    [clean junkcoms] = compcor12(dirty, hdr, 10);
+    [clean junkcoms] = compcor12(dirty, hdr, 12);
             
-    fprintf('\nWriting ....%s version \n', workFile);
+    fprintf('\nWriting ....clean_%s version \n', workFile);
     [pth root ext] = fileparts(workFile);
     tmp = ['clean_' root ext];
-    write_img(tmp, clean, hdr);
-
+    
+    if isfield(hdr, 'tdim')
+        write_img(tmp, clean, hdr);
+    else
+        write_nii(tmp, clean, hdr, 0);
+    end
+    
     if ~isempty(args.designMat)
         % decorrelate the designmatrix out of the confounds
         fprintf('\nDecorrelating junk regressors from CompCor  ...\n')
@@ -375,6 +381,7 @@ if ~isempty(args.anat_img)
                 subfiles{n} = [workFile ',' num2str(n)];
                 spm_write_sn( subfiles{n}  , 'mynorm_parms.mat');
             end
+            workFile = fullfile(pth , ['w' root '.img']);
         end
         
         fprintf('\nApplying Normalization to anatomical and mean_sub ...');
@@ -432,10 +439,13 @@ if args.doGLM
     
     spmJr(workFile, args.designMat ,args.contrasts, flags);
     
+    % Write out the thresholded percent signal changes
+    contrast2percent(1000, 2.5);
+    
     % show the different Zmaps as a diagnostic:
-    for z=1:size(args.contrasts,1);
-        figure; lightbox(sprintf('Zmap_%04d.img', z),  [], 4);
-    end
+%     for z=1:size(args.contrasts,1);
+%         figure; lightbox(sprintf('Zmap_%04d.img', z),  [], 4);
+%     end
 end
 
 
@@ -489,7 +499,7 @@ if args.doOrtho
     clear global args
     
     ortho2005([],...
-        'anat_file', 'mean_sub', ...
+        'anat_file', 'Bhats.img', ...
         'tseries_file', tfile, ...
         'spm_file', sprintf('Zmap_%04d.img', size(contrasts,1)),...
         'threshold', 2 ...
