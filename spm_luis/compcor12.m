@@ -43,6 +43,8 @@ title('std. dev. map')
 subplot(212)
 lightbox(reshape(msk,hdr.xdim, hdr.ydim, hdr.zdim));
 title('pixels for compcor');
+set(gcf,'Name', 'Compcor Uses the Noisiest voxels')
+
 mdirty = dirty .* repmat(msk, hdr.tdim,1);
 
 [u, s,v]=svd(mdirty',0);
@@ -52,6 +54,7 @@ subplot(211), plot(diag(s)); title('Eigenvalues')
 junkcomps = v(:,1:Ncomps);
 subplot(212)
 plot(junkcomps), title (sprintf('First %d components',Ncomps));
+set(gcf,'Name', 'SVD identified Noise components')
 
 % mean center the components:
 junkcomps = junkcomps - repmat(mean(junkcomps,1), hdr.tdim,1);
@@ -76,6 +79,7 @@ title('std. dev. map BEFORE')
 subplot(212)
 lightbox(reshape(cc_sigma,hdr.xdim, hdr.ydim, hdr.zdim));
 title('std. dev. map AFTER');
+set(gcf,'Name', 'Compcor Reduction in Noise')
 
 
 return

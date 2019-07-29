@@ -71,8 +71,6 @@ end
 % save arguments for future use
 save asl_spm03_params.mat args
 
-close all
-
 %% First figure out the input working file name
 workFile = args.inFile;
 [pth name ext] = fileparts(workFile);
@@ -206,12 +204,15 @@ if args.subType > 0
     ortho_args = ortho2005;
     ortho_args.tseries_file =  workFile;
     ortho_args.ROItype = 'sphere';
-    ortho_args.ROIsize = 20;
+    ortho_args.ROIsize = 2;
     ortho_args.doMovie = 0;
     ortho_args.interact = 0;
     
     ortho2005(ortho_args);
     title(sprintf('UN - Subtracted Time Series'))
+    set(gcf,'Name', 'OrthoView of Raw Images')
+    close(findobj('Name','Histograms'))
+    
     % subtraction section
     h = read_nii_hdr(workFile);
     Nframes = h.dim(5)
@@ -226,16 +227,16 @@ if args.subType > 0
             [p, rootname,e] = fileparts(workFile);
             aslsub(rootname, 1, args.M0frames + 1, Nframes, 0, args.subOrder, 0);
             
-            figure
-            ms = lightbox('mean_sub',[-200 200],[]);
+            
+            ms = read_img('mean_sub');
             if sum(ms(:)) < 0
                 fprintf('\n WARNING:  reversing the subtraction order! \n')
                 aslsub(rootname, 1, args.M0frames + 1, Nframes, 0, ~(args.subOrder), 0);
                 ms = lightbox('mean_sub',[-200 200],[]);
             end
             workFile = 'sub.img';
-            
             title('Mean subtraction (pairwise)');
+            set(gcf,'Name', 'Slice View of Mean Difference Image')
             
         case 2
             fprintf('\ndoing surround subtraction on ...%s\n', workFile);
@@ -243,37 +244,46 @@ if args.subType > 0
             [p, rootname,e] = fileparts(workFile);
             aslsub_sur(rootname, args.M0frames + 1, Nframes, 0, args.subOrder);
             
-            figure
-            ms = lightbox('mean_sub',[-200 200],[]);
+            ms = read_img('mean_sub');
             if sum(ms(:)) < 0
                 fprintf('\n WARNING:  reversing the subtraction order! \n')
                 aslsub_sur(rootname, 1,Nframes, 0, ~(args.subOrder));
-                ms = lightbox('mean_sub',[-200 200],[]);
             end
             workFile = 'sub.img';
-            p = get(gcf, 'Position');
-            set(gcf,'Position', p + [5 -1 0 0]*100);
-            title('Mean Subtraction (surround)');
+
+%             figure
+%             ms = lightbox('mean_sub',[],[]);
+%             p = get(gcf, 'Position');
+%             set(gcf,'Position', p + [3 -2 0 0]*100);
+%             title('Mean Subtraction (surround)');
+%             set(gcf,'Name', 'Slice View of Mean Difference Image')
+%             colormap hot
     end
     %
     %
 
-    colormap hot
+  
 
     ortho_args = ortho2005;
     ortho_args.anat_file =  'mean_sub';
     ortho_args.tseries_file =  workFile;
     ortho_args.wscale = [0 200];
     ortho_args.ROItype = 'sphere';
-    ortho_args.ROIsize = 20;
+    ortho_args.ROIsize = 2;
     ortho_args.doMovie = 0;
     ortho_args.interact = 0;
     ortho2005(ortho_args);
-   
+      
+
     colormap hot
     p = get(gcf, 'Position');
     set(gcf,'Position', p + [2 -1 0 0]*100);
     title(sprintf('Subtracted Time Series'))
+    set(gcf,'Name', 'OrthoView of Mean Difference Image')
+    
+
+    close(findobj('Name','Histograms')) 
+
 end
 %% Physio correction section using CompCor:
 %  use this with subtracted data only
@@ -296,12 +306,13 @@ if args.CompCorr==1
     
     if ~isempty(args.designMat)
         % decorrelate the designmatrix out of the confounds
+        X = args.designMat; % regressors of interest
+        pr = pinv(X);
         fprintf('\nDecorrelating junk regressors from CompCor  ...\n')
-        ref = args.designMat; % regressors of interest
-        pr = pinv(ref);
+        whos junkcoms X
         for n=1:size(junkcoms,2)
             reg = junkcoms(:,n);
-            reg = reg - ref*(pr*reg);
+            reg = reg - X*(pr*reg);
             % mean center the confounds
             reg = reg -mean(reg);
             junkcoms(:,n) = reg;
@@ -315,8 +326,9 @@ if args.CompCorr==1
         fprintf('\nWriting out adjusted (compcor) design matrix : designMat_compcor.dat ...\n')
         save designMat_compcor.dat x -ascii
         
-        figure; imagesc(args.designMat);
-        title('Design Matrix with CompCor confounds');drawnow
+        figure; imagesc(args.designMat);            
+        set(gcf,'Name', 'Compcor Identified noise patterns in the time series ')
+        title('Design Matrix PLUS CompCor confounds');drawnow
     end
 
 end
@@ -425,8 +437,13 @@ if args.doGLM
     fprintf('\nEstimating GLM on %s ....\n', workFile);
     
     figure
+    subplot(121)
     imagesc(args.designMat);
     title('This is the design matrix')
+    subplot(222)
+    imagesc(args.contrasts);
+    title('These are the contrasts')
+    colormap gray
     
     if args.isSubtracted==0
         flags.doWhiten=1;
@@ -470,20 +487,20 @@ if args.doQuant_GLM
 end
 
 %% making nice overlays of the flows
-if args.doLightbox ==1
-    
-    [flows h] = read_img('ExpFlows');
-    flows = reshape(flows, h.tdim,  h.xdim*h.ydim*h.zdim);
-    
-    f0 = reshape(flows(1,:), h.xdim,h.ydim,h.zdim);
-    
-    for f=1:size(flows,1)
-        f_act = reshape(flows(f , :), h.xdim,h.ydim,h.zdim) ;
-        figure
-        act_lightbox( f0, f_act, [10 80], [1 25], 5);
-        title(sprintf('Contrast number %d', f));
-    end
-end
+% if args.doLightbox ==1
+%     
+%     [flows h] = read_img('ExpFlows');
+%     flows = reshape(flows, h.tdim,  h.xdim*h.ydim*h.zdim);
+%     
+%     f0 = reshape(flows(1,:), h.xdim,h.ydim,h.zdim);
+%     
+%     for f=1:size(flows,1)
+%         f_act = reshape(flows(f , :), h.xdim,h.ydim,h.zdim) ;
+%         figure
+%         act_lightbox( f0, f_act, [10 80], [1 25], 5);
+%         title(sprintf('Contrast number %d', f));
+%     end
+% end
 
 %% if needed, we can put it in ortho to explore the time course
 if args.doOrtho
@@ -502,9 +519,11 @@ if args.doOrtho
         'anat_file', 'Bhats.img', ...
         'tseries_file', tfile, ...
         'spm_file', sprintf('Zmap_%04d.img', size(contrasts,1)),...
+        'ROItype', 'sphere', ...
+        'ROIsize', 2, ...
         'threshold', 2 ...
         );
-    
+   close(findobj('Name','Histograms')) 
 end
 %
 %% Adding new stuff below (8/21/13)
@@ -520,18 +539,23 @@ end
 %write_nii('mean_func.nii', meandata, h,0);
 
 %% DIsplay the activation maps
-if args.doLightbox ==2
+if args.doLightbox ==1
     
     [underlay h] = read_img('mean_sub');
-    
+    underlay = reshape(underlay,[h.xdim h.ydim h.zdim]);
+
     
     for f=1:size(args.contrasts,1)
         
         [zmap h] = read_img(sprintf('Zmap_%04d',f));
-        
+        zmap = reshape(zmap,[h.xdim h.ydim h.zdim]);
         figure
-        act_lightbox( underlay, zmap, [0 2e2], [2.5 10], []);
-        title(sprintf('Contrast number %d', f));
+        act_lightbox( underlay, zmap, [0 2e2], [2.5 10], [6]);
+        title(sprintf('Contrast number %d: [%s]', f, num2str(args.contrasts(f,:))));
+        set(gcf,'Name','Activation map (Z) overlaid on difference image');
+        ylabel('Z score')
+        p = get(gcf, 'Position');
+        set(gcf,'Position', p + [(2+f) (2*f) 0 0]*10);
     end
 end
 

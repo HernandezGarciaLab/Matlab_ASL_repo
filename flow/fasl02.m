@@ -148,8 +148,8 @@ if ~isempty(str)
         whos c X
     end
     
-    args.doLightbox = get(findobj('Tag','doLightbox_cb'),'Value');
-    args.doOrtho = get(findobj('Tag','displayZmap_cb'),'Value');
+    args.doLightbox = get(findobj('Tag','displayZmap_cb'),'Value');
+    args.doOrtho = 0; % get(findobj('Tag','displayZmap_cb'),'Value');
     args.is_GE_asl = get(findobj('Tag','ge_cb'),'Value');
     
     %%  Here is the call to the main function:  %%%%%%%
@@ -328,7 +328,7 @@ function doGLM_cb_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of doGLM_cb
 tmp = get(gco,'Value');
-state = 'off'
+state = 'off';
 if tmp == 1
     state = 'on';
 end

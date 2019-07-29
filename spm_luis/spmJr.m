@@ -100,6 +100,14 @@ df = size(all_data,1) - size(DesMat,2)+1;
 %%%%
 
 warning off
+fprintf('\n The sizes of your analysis are as follows: ')
+whos DesMat all_data contrast
+if  size(DesMat,1) ~= size(all_data,1)
+    fprintf('\n\nWrong size ... Aborting. Double check your data and design matrix\n')
+end
+if  size(DesMat,2) ~= size(contrast,2)
+    fprintf('\n\nWrong size ... Aborting. Double check your contrasts and design matrix\n')
+end
 
 fprintf('\n Estimating Beta parameters and variance ...');
 
