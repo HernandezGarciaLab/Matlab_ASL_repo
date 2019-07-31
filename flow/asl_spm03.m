@@ -541,7 +541,11 @@ end
 %% DIsplay the activation maps
 if args.doLightbox ==1
     
-    [underlay h] = read_img('mean_sub');
+    if args.spat_norm_series==1
+        [underlay h] = read_img('wmean_sub');
+    else
+        [underlay h] = read_img('mean_sub');
+    end
     underlay = reshape(underlay,[h.xdim h.ydim h.zdim]);
 
     
