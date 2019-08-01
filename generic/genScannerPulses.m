@@ -15,6 +15,13 @@ dnsample = floor(SAMPRATE/dt);
 rf1 = rf1(1:dnsample:end);
 G = G(1:dnsample:end);
 
+% if it's an odd number of points, put a zero at the end
+if floor(NPOINTS/2) ~= (NPOINTS/2)
+    rf1 = [rf1 ; 0];
+    G = [G; 0];
+    NPOINTS = NPOINTS+1;
+end
+
 dacmax = hex2dec('7ffe');
 
 % Now write out scanner files:  magnitude

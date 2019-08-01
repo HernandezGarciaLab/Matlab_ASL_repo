@@ -48,7 +48,7 @@ for n=1:length(confiles)
     
     h.datataype = 32;
     h.bits = 32;
-    pct = scaleimg .* msk0 .* msk .* (tmp ./ base);
+    pct = scaleimg(:) .* msk0(:) .* msk(:) .* (tmp(:) ./ base(:));
     write_img(sprintf('percent_%04d.img', n), pct, h);
     
     fprintf('\nWrting  percent signal change for contrast: %d (thresholded image) ...', n); 
