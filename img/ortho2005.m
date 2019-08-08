@@ -1208,9 +1208,15 @@ while (button ~= 122)  % until they press Z.  122 is ASCII for the Z key
                         %axes(h1);
                     end
                     
-                    % Call modified version of MATLAB builtin ginput
-                    [i j button, myOut, hThisObj] = myginput(1,hLines);
                     
+                   try  % this allows me to break out of the function with CTRL-C
+                    
+                        % Call modified version of MATLAB builtin ginput
+                        [i j button, myOut, hThisObj] = myginput(1,hLines);
+                    
+                    catch  % do this is if there is an error 
+                        return
+                    end
 
                     
                     if myOut==2
