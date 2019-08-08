@@ -70,7 +70,9 @@ end
 %
 % save arguments for future use
 save asl_spm03_params.mat args
-
+%%
+try
+    
 %% First figure out the input working file name
 workFile = args.inFile;
 [pth name ext] = fileparts(workFile);
@@ -634,7 +636,14 @@ end
 %     end
 % end
 
-
+global asl_spm_errors
+catch asl_spm_errors
+    
+    fprintf('\n\nErrors happened ... Exiting. ');
+    fprintf('\nThe error structure is in "global asl_spm_errors":');
+    asl_spm_errors
+    return
+end
 
 return
 
