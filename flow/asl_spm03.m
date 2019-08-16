@@ -1,4 +1,4 @@
-function result = asl_spm02(args)
+function result = asl_spm03(args)
 %
 % function result = asl_spm02(args)
 %
