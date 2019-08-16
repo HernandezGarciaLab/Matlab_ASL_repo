@@ -70,16 +70,19 @@ end
 %
 % save arguments for future use
 save asl_spm03_params.mat args
-%%
+
 try
     
 %% First figure out the input working file name
 workFile = args.inFile;
 [pth name ext] = fileparts(workFile);
+cd(pth)
+fprintf('\nNow working in directory: \n%s\n',pth);
 if strcmp(ext, '.img');
+    fprintf('\nConverting %s from Analyze to NIFTI ...\n', workFile);
     [d h]=read_img(workFile);
     h = avw2nii_hdr(h);
-    write_nii( fullfile(pth, [name '.nii']), d, h, 0);
+    write_nii( [name '.nii'], d, h, 0);
     workFile = fullfile(pth, [name '.nii'])
     volFile = workFile;
 end
@@ -551,7 +554,7 @@ if args.doLightbox ==1
     underlay = reshape(underlay,[h.xdim h.ydim h.zdim]);
 
     
-    for f=1:size(args.contrasts,1)
+    for f=1:4 %size(args.contrasts,1)
         
         [zmap h] = read_img(sprintf('Zmap_%04d',f));
         zmap = reshape(zmap,[h.xdim h.ydim h.zdim]);
@@ -561,7 +564,7 @@ if args.doLightbox ==1
         set(gcf,'Name','Activation map (Z) overlaid on difference image');
         ylabel('Z score')
         p = get(gcf, 'Position');
-        set(gcf,'Position', p + [(2+f) (2*f) 0 0]*10);
+        set(gcf,'Position', p/2+ [(2+f) (2*f) 0 0]*10);
     end
 end
 
