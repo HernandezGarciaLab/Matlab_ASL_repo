@@ -14,7 +14,7 @@ end
 % sprec1_3d(Pfile,'N','h','n',64, 'fx', 'fy');
 % sprec1_3d(Pfile,'N', 'n',64,'fx','fy','l');
 
-sprec1_3d(Pfile,'N', 'n',64,'fy','l','C',5);
+sprec1_3d(Pfile,'N', 'n',64,'fy','l','C',1);
 
 vols = dir('vol*.nii');
 volname = vols(1).name;

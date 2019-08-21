@@ -57,7 +57,8 @@ if nargin<1
     args.designMat = [];
     args.isSubtracted = 1;
     args.contrasts = [0 0 -1 1];
-    args.doQuant = 0;
+    args.doQuant_GLM = 0;
+    args.BaseFlow_img = 'wFlow.img';
     args.doGlobalMean = 0;
     args.doLightbox = 0;
     args.doOrtho = 1;
@@ -71,11 +72,14 @@ end
 % save arguments for future use
 save asl_spm03_params.mat args
 
-try
+%try
     
 %% First figure out the input working file name
 workFile = args.inFile;
 [pth name ext] = fileparts(workFile);
+if isempty(pth)
+    pth=pwd;
+end
 cd(pth)
 fprintf('\nNow working in directory: \n%s\n',pth);
 if strcmp(ext, '.img');
@@ -158,10 +162,11 @@ end
 %%  Gaussian Smoothing
 if args.smoothSize >0
     
-    fprintf('\nsmoothing  ....%s\n', workFile);
     
     sz=args.smoothSize;
     
+    fprintf('\nsmoothing  ....%s with %f kernel \n', workFile, sz);
+
     % spm_smooth doesn't handle paths gracefully:
     [pth, root, ext] = fileparts(workFile);
     curDir = pwd;
@@ -474,21 +479,21 @@ end
 
 %% convert betas to perfusions!
 if args.doQuant_GLM
-    if args.subType >0
-        isSubtracted=1
-    else
-        isSubtracted=0;
+    % If the template was specified, this means that we did
+    % a normalization on the images.
+
+    bf_name = args.BaseFlow_img;
+    fprintf('\n\nQuantifying flow contrasts.  Baseline is:  %s', bf_name);  
+    [bf hf] = read_img(bf_name);
+    pct_images = dir('percent*.img');
+    
+    for p=1:length(pct_images)
+        [pct h] = read_img(pct_images(p).name);
+        conFlow = pct .* bf / 1000 / 100;  % the percent images were scaled !
+        conFlow(isnan(conFlow)) = 0;        
+        write_img(sprintf('ConFlow_%04d.img',p), conFlow, h);
     end
-    
-    TR = args.TR;
-    Ttag = args.Ttag;
-    Tdelay = args.Tdelay;,
-    Ttransit = args.Ttransit;
-    inv_alpha = args.inv_alpha;
-    is3D = 1;
-    
-    beta2flow03('ConBhats','ConVar_hats', TR, Ttag, Tdelay, Ttransit, inv_alpha, isSubtracted, is3D);
-    
+        
 end
 
 %% making nice overlays of the flows
@@ -506,6 +511,55 @@ end
 %         title(sprintf('Contrast number %d', f));
 %     end
 % end
+
+%% DIsplay the activation maps
+if args.doLightbox ==1
+    bf_name = args.BaseFlow_img;
+    if args.spat_norm_series==1
+       bf_name = 'wmean_sub.img';
+    end
+    [underlay h] = read_img(bf_name);
+    underlay = reshape(underlay,[h.xdim h.ydim h.zdim]);
+
+    
+    for f=1:size(args.contrasts,1)
+        
+        [zmap h] = read_img(sprintf('conFlow_%04d',f));
+        zmap = reshape(zmap,[h.xdim h.ydim h.zdim]);
+        figure
+        act_lightbox( underlay, zmap, [0 2e2], [5 50], [6]);
+        title(sprintf('Perfusion Contrast number %d: [%s]', f, num2str(args.contrasts(f,:))));
+        set(gcf,'Name','Perfusion Change overlaid on Baseline Perfusion');
+        ylabel('Perfusion')
+        p = get(gcf, 'Position');
+        set(gcf,'Position', p+ [50+(2+f) (2*f) 1 1]*100);
+    end
+end
+
+%% DIsplay the activation maps
+if args.doLightbox ==1
+    bf_name = args.BaseFlow_img;
+    if args.spat_norm_series==1
+       bf_name = 'wmean_sub.img';
+    end
+    [underlay h] = read_img(bf_name);
+    underlay = reshape(underlay,[h.xdim h.ydim h.zdim]);
+
+    
+    for f=1:4 %size(args.contrasts,1)
+        
+        [zmap h] = read_img(sprintf('Zmap_%04d',f));
+        zmap = reshape(zmap,[h.xdim h.ydim h.zdim]);
+        figure
+        act_lightbox( underlay, zmap, [0 2e2], [2.5 10], [6]);
+        title(sprintf('Contrast number %d: [%s]', f, num2str(args.contrasts(f,:))));
+        set(gcf,'Name','Activation map (Z) overlaid on difference image');
+        ylabel('Z score')
+        p = get(gcf, 'Position');
+        set(gcf,'Position', p+ [(2+f) (2*f) 1 1]*200);
+
+    end
+end
 
 %% if needed, we can put it in ortho to explore the time course
 if args.doOrtho
@@ -543,30 +597,6 @@ end
 % h.dim(5)=1;
 %write_nii('mean_func.nii', meandata, h,0);
 
-%% DIsplay the activation maps
-if args.doLightbox ==1
-    
-    if args.spat_norm_series==1
-        [underlay h] = read_img('wmean_sub');
-    else
-        [underlay h] = read_img('mean_sub');
-    end
-    underlay = reshape(underlay,[h.xdim h.ydim h.zdim]);
-
-    
-    for f=1:4 %size(args.contrasts,1)
-        
-        [zmap h] = read_img(sprintf('Zmap_%04d',f));
-        zmap = reshape(zmap,[h.xdim h.ydim h.zdim]);
-        figure
-        act_lightbox( underlay, zmap, [0 2e2], [2.5 10], [6]);
-        title(sprintf('Contrast number %d: [%s]', f, num2str(args.contrasts(f,:))));
-        set(gcf,'Name','Activation map (Z) overlaid on difference image');
-        ylabel('Z score')
-        p = get(gcf, 'Position');
-        set(gcf,'Position', p/2+ [(2+f) (2*f) 0 0]*10);
-    end
-end
 
 %% Preprocessing of anatomical files- do this if files are not already reconstructed.
 
@@ -639,14 +669,13 @@ end
 %     end
 % end
 
-global asl_spm_errors
-catch asl_spm_errors
-    
-    fprintf('\n\nErrors happened ... Exiting. ');
-    fprintf('\nThe error structure is in "global asl_spm_errors":');
-    asl_spm_errors
-    return
-end
+% catch asl_spm_errors
+%     
+%     fprintf('\n\nErrors happened ... Exiting. ');
+%     fprintf('\nThe error structure is in "global asl_spm_errors":');
+%     save asl_spm_errors.mat asl_spm_errors
+%     return
+% end
 
 return
 

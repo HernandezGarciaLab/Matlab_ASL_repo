@@ -22,7 +22,7 @@ function varargout = fasl02(varargin)
 
 % Edit the above text to modify the response to help fasl02
 
-% Last Modified by GUIDE v2.5 12-Jul-2019 12:59:53
+% Last Modified by GUIDE v2.5 21-Aug-2019 11:24:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -134,6 +134,7 @@ if ~isempty(str)
     args.doGLM = get(findobj('Tag','doGLM_cb'),'Value');
     args.designMat = [];
     args.doQuant_GLM = get(findobj('Tag','doQuant_GLM_cb'),'Value');
+    args.BaseFlow_img = get(findobj('Tag','BaseFlow_img_edit'),'String');;
 
     if args.doGLM ~= 0
         xname = get(findobj('Tag','loadDesignMatrix_edit'),'String');
@@ -149,7 +150,7 @@ if ~isempty(str)
     end
     
     args.doLightbox = get(findobj('Tag','displayZmap_cb'),'Value');
-    args.doOrtho = 0; % get(findobj('Tag','displayZmap_cb'),'Value');
+    args.doOrtho =  get(findobj('Tag','showPerfMaps_cb'),'Value');
     args.is_GE_asl = get(findobj('Tag','ge_cb'),'Value');
     
     %%  Here is the call to the main function:  %%%%%%%
@@ -341,7 +342,7 @@ set(findobj('Tag', 'displayZmap_cb'), 'Enable',state);
 set(findobj('Tag', 'isSubtracted_cb'), 'Enable',state);
 set(findobj('Tag', 'doQuant_GLM_cb'), 'Enable',state);
 set(findobj('Tag', 'doLightbox_cb'), 'Enable',state);
-
+set(findobj('Tag', 'showPerfMaps_cb'), 'Enable',state);
 
 % --- Executes on button press in displayZmap_cb.
 function displayZmap_cb_Callback(hObject, eventdata, handles)
@@ -394,7 +395,12 @@ function doQuant_GLM_cb_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of doQuant_GLM_cb
 if get(gco,'Value')==1
-   set(findobj('Tag', 'doLightbox_cb'), 'Enable','on');
+    set(findobj('Tag', 'doLightbox_cb'), 'Enable','on');
+    set(findobj('Tag', 'BaseFlow_img_edit'), 'Enable','on');
+    
+    [f p] = uigetfile('*.*','Select Baseline Flow image');
+    str = fullfile(p,f);
+    set(findobj('Tag','BaseFlow_img_edit'),'String', str);
 else
    set(findobj('Tag', 'doLightbox_cb'), 'Enable','off');
 end
@@ -583,13 +589,13 @@ function sliceTiming_cb_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of sliceTiming_cb
 
 
-% --- Executes on button press in doLightbox_cb.
-function doLightbox_cb_Callback(hObject, eventdata, handles)
-% hObject    handle to doLightbox_cb (see GCBO)
+% --- Executes on button press in showPerfMaps_cb.
+function showPerfMaps_cb_Callback(hObject, eventdata, handles)
+% hObject    handle to showPerfMaps_cb (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of doLightbox_cb
+% Hint: get(hObject,'Value') returns toggle state of showPerfMaps_cb
 
 
 % --- Executes on button press in isSubtracted_cb.
@@ -919,3 +925,26 @@ function spat_norm_series_cb_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of spat_norm_series_cb
+
+
+
+function BaseFlow_img_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to BaseFlow_img_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of BaseFlow_img_edit as text
+%        str2double(get(hObject,'String')) returns contents of BaseFlow_img_edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function BaseFlow_img_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to BaseFlow_img_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
