@@ -72,7 +72,7 @@ end
 % save arguments for future use
 save asl_spm03_params.mat args
 
-%try
+try
     
 %% First figure out the input working file name
 workFile = args.inFile;
@@ -513,7 +513,7 @@ end
 % end
 
 %% DIsplay the activation maps
-if args.doLightbox ==1
+if args.doLightbox ==1 && args.doQuant_GLM
     bf_name = args.BaseFlow_img;
     if args.spat_norm_series==1
        bf_name = 'wmean_sub.img';
@@ -669,13 +669,13 @@ end
 %     end
 % end
 
-% catch asl_spm_errors
-%     
-%     fprintf('\n\nErrors happened ... Exiting. ');
-%     fprintf('\nThe error structure is in "global asl_spm_errors":');
-%     save asl_spm_errors.mat asl_spm_errors
-%     return
-% end
+catch asl_spm_errors
+    
+    fprintf('\n\nErrors happened ... Exiting. ');
+    fprintf('\nThe error structure is in "global asl_spm_errors":');
+    save asl_spm_errors.mat asl_spm_errors
+    return
+end
 
 return
 
