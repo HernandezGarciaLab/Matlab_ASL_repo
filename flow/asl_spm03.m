@@ -107,13 +107,17 @@ if args.doRecon
     end
     %}
     fprintf('\ndoing 3D recon on ....%s\n', workFile);
+    fprintf('\nwarning ... REMOVING old *VOL* FILES FROM DIRECTORY '); pause(3)
+    !rm *vol*
     
     % include Z grappa option for recon
     if args.doZgrappa == 1,
         fprintf('\n(Using 1-D GRAPPA along Z axis)');
-        fprintf('\nwarning ... REMOVING AND *VOL* FILES FROM DIRECTORY '); pause(3)
-        !rm *vol*
         sprec1_3d_grappaz(workFile, 'l', 'fy','N', 'C', 1, 'grappaz', args.M0frames);
+        
+        fprintf('\nSplitting the time series into:');
+        fprintf('\n    - mean of %d Calibration Frames (spin density)', args.M0frames);
+        fprintf('\n    - BGS suppressed label-control frames ...'); 
         load fullysampled.mat
         tmp = dir('vol*.nii');
         h = read_nii_hdr(tmp(1).name);
@@ -121,7 +125,31 @@ if args.doRecon
         h.tdim = 1;
         write_img('SpinDensity.img', fullimg(:),h);
     else
+        fprintf('\n(No GRAPPA along Z axis)');
         sprec1_3d_grappaz(workFile, 'l', 'fy','N', 'C', 1, 'l');
+        
+        if args.M0frames>0
+            fprintf('\nSplitting the time series into:');
+            fprintf('\n    - mean of %d Calibration Frames (spin density)', args.M0frames);
+            fprintf('\n    - BGS suppressed label-control frames ...');
+            
+            tmp = dir('vol*.nii');
+            workFile = tmp(1).name;
+            volFile = workFile;
+            
+            [dat h2] = read_nii_img(volFile);
+            m0 = dat(1:args.M0frames, :);
+            m0 = mean(m0,1); 
+            dat = dat(args.M0frames+1:end, :);
+            
+            h2.dim(5) = h2.dim(5) - args.M0frames;
+            write_nii(volFile, dat,h2, 0);
+            
+            h = nii2avw_hdr(h2);
+            h.tdim = 1;
+            write_img('SpinDensity.img', m0(:),h);
+        end
+        
     end
     
     tmp = dir('vol*.nii');
