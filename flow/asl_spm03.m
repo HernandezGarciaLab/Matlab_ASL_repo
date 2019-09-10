@@ -263,13 +263,13 @@ if args.subType > 0
             fprintf('\ndoing pairwise subtraction on ...%s\n', workFile);
             !rm sub.img sub.hdr
             [p, rootname,e] = fileparts(workFile);
-            aslsub(rootname, 1, args.M0frames + 1, Nframes, 0, args.subOrder, 0);
+            aslsub(rootname, 1, 1, Nframes, 0, args.subOrder, 0);
             
             
             ms = read_img('mean_sub');
             if sum(ms(:)) < 0
                 fprintf('\n WARNING:  reversing the subtraction order! \n')
-                aslsub(rootname, 1, args.M0frames + 1, Nframes, 0, ~(args.subOrder), 0);
+                aslsub(rootname, 1,  1, Nframes, 0, ~(args.subOrder), 0);
                 ms = lightbox('mean_sub',[-200 200],[]);
             end
             workFile = 'sub.img';
@@ -280,7 +280,7 @@ if args.subType > 0
             fprintf('\ndoing surround subtraction on ...%s\n', workFile);
             !rm sub.img sub.hdr
             [p, rootname,e] = fileparts(workFile);
-            aslsub_sur(rootname, args.M0frames + 1, Nframes, 0, args.subOrder);
+            aslsub_sur(rootname,  1, Nframes, 0, args.subOrder);
             
             ms = read_img('mean_sub');
             if sum(ms(:)) < 0
@@ -326,7 +326,7 @@ end
 %% Physio correction section using CompCor:
 %  use this with subtracted data only
 if args.CompCorr==1
-    fprintf('\nPerforming PCA CpmpCor on %s  ...\n', workFile)
+    fprintf('\nPerforming PCA CompCorr on %s  ...\n', workFile)
     [dirty hdr] = read_img(workFile);
     
     
@@ -698,9 +698,9 @@ end
 % end
 
 catch asl_spm_errors
-    
+    asl_spm_errors
     fprintf('\n\nErrors happened ... Exiting. ');
-    fprintf('\nThe error structure is in "global asl_spm_errors":');
+    fprintf('\nThe error structure is in "asl_spm_errors.mat":');
     save asl_spm_errors.mat asl_spm_errors
     return
 end
