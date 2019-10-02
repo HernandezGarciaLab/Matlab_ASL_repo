@@ -22,7 +22,7 @@ function varargout = fasl02(varargin)
 
 % Edit the above text to modify the response to help fasl02
 
-% Last Modified by GUIDE v2.5 21-Aug-2019 11:24:23
+% Last Modified by GUIDE v2.5 02-Oct-2019 12:57:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -83,7 +83,7 @@ function go_button_Callback(hObject, eventdata, handles)
 global args
 str = get(findobj('Tag','inputData_edit'),'String');
 
-if ~isempty(str)
+%if ~isempty(str)
     % Gather data from the interface into ARGS structure
     args.inFile = str;  
 
@@ -151,22 +151,25 @@ if ~isempty(str)
     
     args.doLightbox = get(findobj('Tag','displayZmap_cb'),'Value');
     args.doOrtho =  get(findobj('Tag','showPerfMaps_cb'),'Value');
-    args.is_GE_asl = get(findobj('Tag','ge_cb'),'Value');
+    args.FlowScaleFactor = eval(get(findobj('Tag','scale_edit'),'String'));
     
     %%  Here is the call to the main function:  %%%%%%%
     save asl_spm03_params.mat args
     asl_spm03(args);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-else
-    disp('NO DATA to WORK ON!')
-end
+% else
+%     disp('NO DATA to WORK ON!')
+% end
 % --- Executes on button press in inputData_button.
 function inputData_button_Callback(hObject, eventdata, handles)
 % hObject    handle to inputData_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[f p]=uigetfile('*.*','Input Data (kpace OR image space)');
-str = fullfile(p,f);
+% [f p]=uigetfile('*.*','Input Data (kpace OR image space)', 'MultiSelect', 'on');
+
+str = spm_select;
+
+% str = fullfile(p,f);
 set(findobj('Tag','inputData_edit'),'String', str);
 
 function inputData_edit_Callback(hObject, eventdata, handles)
@@ -940,6 +943,29 @@ function BaseFlow_img_edit_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function BaseFlow_img_edit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to BaseFlow_img_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function scale_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to scale_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of scale_edit as text
+%        str2double(get(hObject,'String')) returns contents of scale_edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function scale_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to scale_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

@@ -62,7 +62,7 @@ if nargin<1
     args.doGlobalMean = 0;
     args.doLightbox = 0;
     args.doOrtho = 1;
-    
+    args.FlowScaleFactor = 1;
     args.subOrder = 1;
     
     result = args;
@@ -75,7 +75,24 @@ save asl_spm03_params.mat args
 try
     
 %% First figure out the input working file name
-workFile = args.inFile;
+
+[pth name ext] = fileparts(args.inFile(1,:));
+
+if strcmp(ext, '.nii')
+    mkdir('Merged')
+    cd('Merged')
+    
+    fprintf('\nNow working in directory: \n%s\n',pwd)
+    
+    disp('Now Merging Files')
+    
+    spm_file_merge(args.inFile, [pwd '/merged.nii']);
+    
+    workFile = [pwd '/merged.nii'];
+
+end
+
+workFile = args.inFile(1,:);
 [pth name ext] = fileparts(workFile);
 if isempty(pth)
     pth=pwd;
@@ -383,12 +400,38 @@ if args.doQuant==1
     pid = args.Tdelay;
     T1 = args.T1;
     
+    % Check to see if this is the vasc file from the GE scanner
+    % they have two time frames: difference and spin density images.
+    % If that's the case, we'll split it into the 
+    % INDIVIDUAL subtraction and spin density image files 
+    % otherwise, we ignore the inFile for the CBF calculation
+    
+    Vo = spm_file_split(args.inFile);
+    if length(Vo)==2
+        movefile(Vo(2).fname, 'SpinDensity.nii', 'f');
+        movefile(Vo(1).fname, 'mean_sub.nii', 'f');
+        
+        args.Diff_img = 'mean_sub.nii';
+        args.SpinDens_img = 'SpinDensity.nii';
+    end
+    
+    [msk h] = read_img(args.SpinDens_img);
+    thresh = 1*std(msk(:));
+    msk(msk<=thresh) = 0;
+    msk(msk>0) = 1;
+    
     f = calc_cbf_wp(args.Diff_img, args.SpinDens_img, inv_alpha, Ttag, TR, pid, T1);
+    
+    [d h] = read_img('Flow.img');
+    d = msk .* d * args.FlowScaleFactor;
+    write_img('Flow.img',d,h);
+    
+    % Read Flow.img and multiply by scale factor here
     
     figure
     subplot(221),  lightbox('mean_sub');  title('mean subtraction')
     subplot(222),  lightbox('sSpinDensity'); title('smoothed spin density')
-    subplot(223),  lightbox('Flow', [0 60], []) ; title('flow')
+    subplot(223),  lightbox('Flow', [0 60], []) ; title('Perfusion (ml/min/100g)')
     
 end
 
