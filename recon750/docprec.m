@@ -43,18 +43,18 @@ if ((scaninfo.revflg ~= 1)) % && (args.rsa == 2))
             ptr = (coilnum-1)*(concat+1)*npr + (prnum-1)*(concat+1) + concat + 1;
             % nav correction:
             if prnum==1
-                refPoint = dat(1,ptr);
+                refPoint = dat(1:10,ptr);
                 datin = [datin (dat(:,ptr).').*kdens];
                 
             else
                 
-                navcorrection =  dat(1,ptr) / refPoint ;
+                navcorrection =  mean(refPoint ./ dat(1:10,ptr)) ;
                 
-                if navcorrection==0, navcorrection=1, end
-                if isnan(navcorrection), navcorrection=1, end
-                if isinf(navcorrection), navcorrection=1, end
+                if navcorrection==0, navcorrection=1; end
+                if isnan(navcorrection), navcorrection=1; end
+                if isinf(navcorrection), navcorrection=1; end
                 
-                tmpdat = dat(:,ptr) / navcorrection;
+                tmpdat = dat(:,ptr) * navcorrection;
 
                 % for debugging: 
                 if (~isempty(find(isnan(tmpdat))))

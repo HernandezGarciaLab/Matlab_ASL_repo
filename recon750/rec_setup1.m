@@ -36,6 +36,10 @@ if exist('rawfile','var') == 0
   fprintf(stderr,'d #  Sample delay term (for calibration)\n');
   fprintf(stderr,'QI   Do in spiral data in in-out spiral acquisition\n');
   fprintf(stderr,'QO   Do out spiral data in in-out spiral acquisition\n');
+  fprintf(stderr,'grappaz #    do 1D GRAPPA recon along z axis with # Cal. frames\n');
+  fprintf(stderr,'RR   reverse the spiral interleave rotation direction\n');
+  fprintf(stderr,'hpz  include High pass filter along z axis\n');
+  
   fprintf(stderr,'\nOutput Options\n');
   fprintf(stderr,'V    Read header only (no recon)\n');
   fprintf(stderr,'v    Verbose\n');
@@ -115,6 +119,9 @@ if exist('args','var') == 0
     args.numACS = 0;
     % LHG 1.10.19 - fix for rotation of the spiral leaves
     args.RR = 0;
+    % LHG 8.20.19: add a high pass filter along z axis (for 3d FSE)
+    args.hpz = 0;
+    
     
 end
 %
@@ -175,8 +182,9 @@ end
           args.numACS = getnum(cell2mat(varargin(argn)));
           % number of calibration scans before the undersampling begins
           argn = argn+1;
-      case 'RR', args.RR = 1;   % flip x axis at output 
-
+      case 'RR', args.RR = 1;   % Reverse Rotation of spiral shots 
+      case 'hpz', args.hpz = 1;  %   high pass filter along z a-xis
+          
       otherwise, 
         fprintf(stderr,'%s: Did not recognize option %s\n',mfilename,argtype);
     end % switch

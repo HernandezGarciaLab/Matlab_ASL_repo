@@ -5,7 +5,7 @@ function strFileOut = sprec1_3d_grappaz(pfile,varargin)
 %
 % call sprec1 with no arguments to find options
 %
-% to allow immeidate access to matlab recon variables
+% to allow immediate access to matlab recon variables
 % edit this file to comment out the top line and change
 % scriptmode = 1;
 %
@@ -543,6 +543,33 @@ else
         end
         
       
+        if args.hpz > 0
+            % LHG 8.20.19: adding a high pass filter for the data
+            % specify the filter kernel:         
+            z = linspace(0, 1, nslices/2);
+            
+            zfilter =1./(1+exp((z-0.19*length(z))/(0.024*length(z))));
+            zfilter = [zfilter zfilter(end:-1:1) ];
+            
+            zfilter = 1 - exp((-z/length(z)*10));
+            zfilter = [ zfilter(end:-1:1) zfilter];
+            
+                       
+            % scaling:
+            zfilter = zfilter - min(zfilter);
+            zfilter = zfilter/max(zfilter);
+            zfilter = zfilter + 1;
+            % zfilter = zfilter/sum(zfilter);
+            % plot(zfilter)
+            hpz = zeros(nim, nim, nslices);
+            for k=1:nim
+                for j=1:nim
+                    hpz(k,j,:) = zfilter;
+                end
+            end
+            
+        end
+        
         %
         % LHG : do the FFT along the z direction for a stack of spirals
         if (nslices > 1)
@@ -553,7 +580,14 @@ else
                
                 tmp = squeeze(imarall(:,:,:,n));
  
-                imar = fftshift( ifft( fftshift(tmp,3) ,[], 3) ,3 );
+                if args.hpz > 0 % LHG adding the filter option 8/20/19
+                    tmp = tmp .* hpz;
+                end
+                if args.RR==1
+                    imar = nslices*ifft( fftshift(tmp,3) ,[], 3);
+                 else
+                    imar = nslices*fftshift( ifft( fftshift(tmp,3) ,[], 3) ,3 );
+                 end
                 
                 if n==1, coil1 = tmp; end
                                   
