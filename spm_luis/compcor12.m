@@ -25,7 +25,7 @@ if nargin<3
     Ncomps = 10;
 end
 
-TopPercentSigma = 10;
+TopPercentSigma = 20;
 
 fprintf('\nFinding the top %d components of the pixels with the top %d of the variance\n...',Ncomps, TopPercentSigma)
 
@@ -35,6 +35,7 @@ end
 
 sigma = std(dirty,1);
 msk = ccvarmask(sigma, TopPercentSigma);
+%msk = ones(size(sigma));
 
 figure;
 subplot(211)
@@ -46,6 +47,8 @@ title('pixels for compcor');
 set(gcf,'Name', 'Compcor Uses the Noisiest voxels')
 
 mdirty = dirty .* repmat(msk, hdr.tdim,1);
+mdirty(isinf(mdirty))=0;
+mdirty(isnan(mdirty))=0;
 
 [u, s,v]=svd(mdirty',0);
 
@@ -60,11 +63,13 @@ set(gcf,'Name', 'SVD identified Noise components')
 junkcomps = junkcomps - repmat(mean(junkcomps,1), hdr.tdim,1);
 
 if nargin==4
-    fprintf('\ndecorrelating from design matrix\n...')
-
-    % decorrelate the junk components from the design matrix (desired effects)
-    for n=1:size(junkcomps,2)
-        junkcomps(:,n)= junkcomps(:,n) - X*pinv(X)*junkcomps(:,n);
+    if ~isempty(X)
+        fprintf('\ndecorrelating from design matrix\n...')
+        
+        % decorrelate the junk components from the design matrix (desired effects)
+        for n=1:size(junkcomps,2)
+            junkcomps(:,n)= junkcomps(:,n) - X*pinv(X)*junkcomps(:,n);
+        end
     end
 end
 

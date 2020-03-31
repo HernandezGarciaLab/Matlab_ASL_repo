@@ -22,7 +22,7 @@ function varargout = fasl03(varargin)
 
 % Edit the above text to modify the response to help fasl03
 
-% Last Modified by GUIDE v2.5 31-Jul-2019 13:50:40
+% Last Modified by GUIDE v2.5 31-Mar-2020 09:17:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -116,7 +116,7 @@ if ~isempty(str)
     args.SpinDens_img = get(findobj('Tag','SpinDens_img_edit'), 'String');
  
    
-    args.T1 = str2num(get(findobj('Tag','flip_edit'),'String'));
+    args.FlowScaleFactor = str2num(get(findobj('Tag','scale_edit'),'String'));
     args.T1 = str2num(get(findobj('Tag','t1_edit'),'String'));
     args.TR = str2num(get(findobj('Tag','tr_edit'),'String'));
     args.Ttag = str2num(get(findobj('Tag','Ttag_edit'),'String'));
@@ -825,18 +825,18 @@ end
 
 
 
-function flip_edit_Callback(hObject, eventdata, handles)
-% hObject    handle to flip_edit (see GCBO)
+function scale_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to scale_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of flip_edit as text
-%        str2double(get(hObject,'String')) returns contents of flip_edit as a double
+% Hints: get(hObject,'String') returns contents of scale_edit as text
+%        str2double(get(hObject,'String')) returns contents of scale_edit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function flip_edit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to flip_edit (see GCBO)
+function scale_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to scale_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

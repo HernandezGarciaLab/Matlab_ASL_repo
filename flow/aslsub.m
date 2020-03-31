@@ -137,8 +137,7 @@ c2 = zeros(Noutframes, h.xdim*h.ydim*h.zdim);
 % do the averaging:
 index=1;
 %for count = skip+1 : navg: last/2-navg ;
-for count = skip+1 : navg: size(c,1)-navg +1 ;
-
+for count = skip+1 : navg: size(c,1)-navg +1 
 	%fprintf('\nAveraging pairs %d to %d ...', count, count+navg-1);
 	c2(index,:) = mean(c(count : count+navg-1 , :), 1);
 	t2(index,:) = mean(t(count : count+navg-1 , :), 1);

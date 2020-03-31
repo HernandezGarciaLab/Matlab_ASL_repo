@@ -49,7 +49,7 @@ current_Spower = Spower;
 % Loop for an increasing number of subjects (up to three times as many subjects as we have...)
 % set the upper bound to 50 data points required.
 N = N_subjects;
-while ( ( N < 50)   & (Spower < Spower_threshold)  )
+while ( ( N < 100)   & (Spower < Spower_threshold)  )
     
     N = N+1;
     sigma_xn = sigma_x /(sqrt(N / N_subjects));

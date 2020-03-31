@@ -17,16 +17,29 @@ if nargin==9
     isGrappa=0;
 end
 
+doMask = 1;
+MskLevel = 0.25;
+
+doCompCor = 0 ;
 doDespike=1;
 DespikeLevel = 1.25;  % in units of standard deviation
+%DespikeLevel = 1.5;  % in units of standard deviation
+%DespikeLevel = 1.0;  % in units of standard deviation
 
 [raw h] = read_img(raw_file);
 
-% things may not yet be at steady state, so ...
-M01 = raw(1:2:M0frames,:);
-M02 = raw(2:2:M0frames,:);
+% if GRAPPA recon, then the Spin Density is stored in a separate file:
+if isGrappa
+    load fullysampled.mat
+    M0=fullimg(:)';
+    M0frames = 0;
+else
+    M01 = raw(1:2:M0frames,:);
+    M02 = raw(2:2:M0frames,:);
+    M0 = mean(M02,1);
+end
 
-% skip another pair to make sure that there is equilibrium
+% skip a pair of frames to make sure that there is equilibrium
 c = raw(M0frames+3:2:end,:);
 t = raw(M0frames+4:2:end,:);
 
@@ -38,18 +51,11 @@ if (mean(c(:)) <mean(t(:)) )
     
 end
 
-M0 = mean(M02,1);
-
-% if GRAPPA recon, then the Spin Density is stored in a separate file:
-if isGrappa
-    load fullysampled.mat
-    M0=fullimg(:)';
-end
 
 % correction for T1 settling 
 M0 = M0/(1 - exp(-TR/T1));
 
-
+%
 if doDespike
     
     fprintf('\n Removing raw frames that are more than %f Sigma from the mean ...\n',DespikeLevel );
@@ -68,27 +74,80 @@ if doDespike
     t(badinds,:) = [];
 
 end
+%
+%
+% 
+%{
+%begin new despike
+if doDespike
+    
+    fprintf('\n Removing timponts that are more than %f Sigma from the mean (voxelwise)...\n',DespikeLevel );
+    for p=1:size(c,2)
+        % tagged images 
+        tseries = t(:,p);
+        tm = mean(tseries);
+        tstd = std(tseries);
+        badinds = find( abs(tm - tseries) > DespikeLevel*tstd);
+        tseries(badinds) = [];
+        t_tmp(p) = mean(tseries);
 
+        
+        % control images 
+        cseries = c(:,p);
+        cm = mean(cseries);
+        cstd = std(cseries);
+        badinds = find( abs(cm - cseries) > DespikeLevel*cstd);
+        cseries(badinds) = [];
+        c_tmp(p) = mean(cseries);
+
+    end
+    c = c_tmp;
+    t = t_tmp;
+        
+else
+    c = mean(c,1);
+    t = mean(t,1);
+end
+%}
+%- end new despike
+if doCompCor
+   
+    Ncomps = 6;
+    fprintf('\nApplyting Compcor with %d junkcomps...\n', Ncomps );
+    s = c-t;
+    % doing compcor on the time series
+    %
+    hdr = h;
+    hdr.tdim = hdr.tdim/2-4 ;
+    
+    dirty = s;
+    [clean junkcoms] = compcor12(dirty, hdr, Ncomps);
+    s = mean(clean,1);
+end
 
 c = mean(c,1);
 t = mean(t,1);
-s = c - t;
 
-hdr = h;
-hdr.tdim = hdr.tdim/2 -3;
+if ~doCompCor
+    s = c-t;
+end
 
-% doing compcor on the time series
-%{
-dirty = s;
-[clean junkcoms] = compcor12(dirty, hdr);
-s = mean(clean,1);
-%}
+
+if doMask
+    fprintf('\n Masking voxels that are below %f of the mean of M0 ...\n',MskLevel );
+
+    msk = ones(size(M0));
+    msk(M0 < MskLevel*mean(M0))= 0 ;
+    c = c .* msk;
+    t = t .* msk;
+end
+
+
 
 write_img('Control.img',c ,h);
 write_img('Tagged.img',t, h);
 
 
-%keyboard;
 if ~isfield(h,'zsize')
     h=nii2avw_hdr(h);
 end
@@ -108,7 +167,7 @@ write_img('SpinDensity.img',M0 ,h);
 
 % smooth the spin density
 M0 = reshape(M0, h.xdim, h.ydim, h.zdim);
-M0 = smooth3(M0, 'gaussian', [5 5 3]);
+M0 = smooth3(M0, 'gaussian', [7 7 7]);
 M0 = M0(:)';
 
 
@@ -120,9 +179,10 @@ s = s(:)';
 
 % Masking the data (not used)
 mask = zeros(size(M0));
-mask(find(M0>0.2*max(abs(M0(:)))))=1;
+mask(find(M0 > 0.1*max(abs(M0(:)))))=1;
 
 % use the  average M0 over the mask:
+%fprintf('\nAveraging all the M0 values for the gray matter together...\n') 
 %M0 = M0.*mask;
 %M0 = mean(M0(find(M0)));
 
@@ -132,7 +192,6 @@ T1a = 1.67;
 % T1app=1/(1/T1 + 0.01/lambda);
 T1app = T1;
 
-fprintf('\nAveraging all the M0 values for the gray matter together...\n') 
 
 % This is equation 3 from Alsop et al: JCBFM 16, 1236-1249,1996
 % num = c-t;
@@ -156,8 +215,8 @@ den = 2*inv_alpha*T1a *M0 * (1 - exp(-Ttag/T1a));
 f = num./den * 6000;  % adjust units to ml/min/100 g
 
 % Use the stuff in the mask only (not used) 
-%f = f.*mask;
-
+% f = f.*mask;
+f(f>1000)=0;
 
 write_img('Flow.img',f  ,h);
 write_img('sSpinDensity.img',M0 ,h);

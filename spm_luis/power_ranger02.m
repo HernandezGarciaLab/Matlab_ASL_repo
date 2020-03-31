@@ -36,7 +36,7 @@ x = x(:);
 sigma_x = sqrt(read_img(varImg));
 sigma_x = sigma_x(:);
 
-for v=1:length(x)
+parfor v=1:length(x)
     if isfinite(x(v)) && x(v)
         buf = power_finder02(x(v), sigma_x(v)^2, alpha, power_threshold, Nsubjects, 1);
         current_power(v) = buf(1);
