@@ -406,14 +406,14 @@ if args.doQuant==1
     % INDIVIDUAL subtraction and spin density image files 
     % otherwise, we ignore the inFile for the CBF calculation
     
-    Vo = spm_file_split(args.inFile);
-    if length(Vo)==2
-        movefile(Vo(2).fname, 'SpinDensity.nii', 'f');
-        movefile(Vo(1).fname, 'mean_sub.nii', 'f');
-        
-        args.Diff_img = 'mean_sub.nii';
-        args.SpinDens_img = 'SpinDensity.nii';
-    end
+    %Vo = spm_file_split(args.inFile);
+    %if length(Vo)==2
+    %    movefile(Vo(2).fname, 'SpinDensity.nii', 'f');
+    %    movefile(Vo(1).fname, 'mean_sub.nii', 'f');
+    %    
+    %    args.Diff_img = 'mean_sub.nii';
+    %    args.SpinDens_img = 'SpinDensity.nii';
+    %end
     
     [msk h] = read_img(args.SpinDens_img);
     thresh = 1*std(msk(:));
